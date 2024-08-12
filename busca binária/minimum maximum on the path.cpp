@@ -1,100 +1,93 @@
 #include <bits/stdc++.h>
 
 using namespace std;
+#define MAX (int)(1e5 + 10)
 
-#define MAX 100010
-int n,r,d, p[MAX],dist[MAX];
+int n,m,d, ans = -1;
+int v[MAX], dist[MAX], pai[MAX];
 vector<pair<int,int>> g[MAX];
-set<pair<int,int>> s;
-map<int,int> pai;
+queue <int> fila;
 stack<int> caminho;
-const int inf = 1e9+10;
 
-bool check(int x, int pmax){
-    for(int i=2;i<=n;i++) dist[i] = -1;
-    dist[x] = 0;
-    s.insert({0,x});
+bool bfs(int lim){
+    
+    memset(dist, -1, sizeof(dist));
+    dist[1] = 0;
     pai[1] = 0;
+    fila.push(1);
 
-    while(!s.empty()){
-        int atual = s.begin()->second;
-        s.erase(s.begin());
+    while(!fila.empty()){
+        int atual = fila.front();
+        fila.pop();
 
-        for(int i=0;i<g[atual].size();i++){
-            int next = g[atual][i].first;
-            int w = g[atual][i].second;
-
-            if(w>pmax) continue;
-
-            if(dist[next]==-1 && dist[atual]<d && dist[atual]<=d){
-                pai[next] = atual;
-                dist[next] = dist[atual] + 1;
-                s.insert({dist[atual]+1,next});
+        for(auto next: g[atual]){
+            int v = next.first, peso = next.second;
+            if(dist[v]==-1 && peso<=lim && dist[atual]<d){
+                pai[v] = atual;
+                dist[v] = dist[atual] + 1;
+                fila.push(v);
             }
+
         }
     }
-
-    if(dist[n]>d) return false;
+    if(dist[n]==-1 || dist[n]>d) return false;
     else return true;
 }
 
-int busca (){
-    int i = 1;
-    int f = r+1;
-    int ans = -1;
+int busca (int m){
+    int i=1;
+    int f=m;
 
-    while(f>=i){
-        
-        int m = (i+f)/2;
-        if(check(1,p[m])==false) i = m+1;
-        else{
-            if(ans<0) ans = p[m];
-            else ans = min(ans,p[m]);
-            f = m-1;
+    while(i<=f){
+        int meio = (i+f)/2;
+
+        if(bfs(v[meio])) {
+            ans = v[meio];
+            f = meio-1;
         }
 
+        else i = meio+1;
     }
 
     return ans;
 }
 
+
 int main(){
 
-    cin>>n>>r>>d;
-
-    for(int i=1;i<=r;i++){
+    cin>>n>>m>>d;
+    for(int i=1;i<=m;i++){
         int a,b,c;
         cin>>a>>b>>c;
 
-        p[i] = c;
         g[a].push_back({b,c});
+        v[i] = c;
     }
 
-    sort(p,p+n+1);
-    int ans = busca();
+    sort(v,v+m+1);
 
-    if(ans==-1){
-        printf("-1\n");
-        return 0;
-    }
+    ans = busca(m);
+
+    if(ans == -1) cout<<ans<<endl;
 
     else{
-        check(1,ans);
-        cout<<dist[n]<<endl;
         int x = n;
+        bfs(ans);
+
         while(x!=0){
             caminho.push(x);
             x = pai[x];
         }
 
+        cout<<caminho.size()-1<<endl;
+        
         while(!caminho.empty()){
-            int x = caminho.top();
+            cout<<caminho.top();
             caminho.pop();
-            cout<<x;
-
-            if(!caminho.empty()) cout<<" ";
-            else cout<<endl;
+            if(caminho.empty()) cout<<endl;
+            else cout<<" "; 
         }
+
     }
 
     return 0;
